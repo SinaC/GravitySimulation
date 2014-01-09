@@ -97,7 +97,7 @@ namespace Simulator
                 foreach (Body m in Masses)
                 {
                     // F = m a  ==> a = F / m and a = v / dt  ==> v = F * dt / m
-                    m.Velocity += m.Force * dt / m.Mass;
+                    m.Velocity += m.Force * (dt / m.Mass);
                     // v = p / dt ==> p = v * dt
                     m.Position += m.Velocity * dt;
                 }
@@ -106,7 +106,7 @@ namespace Simulator
             {
                 // 1)
                 foreach (Body m in Masses)
-                    m.VelocityMiddleTimeStep = m.PreviousVelocity + m.PreviousForce*dt*0.5/m.Mass;
+                    m.VelocityMiddleTimeStep = m.PreviousVelocity + m.PreviousForce*(dt*0.5/m.Mass);
                 // 2)
                 foreach (Body m in Masses)
                     m.Position = m.PreviousPosition + m.VelocityMiddleTimeStep*dt;
@@ -114,7 +114,7 @@ namespace Simulator
                 CalculateGravitationalForce();
                 // 4) 5)
                 foreach (Body m in Masses)
-                    m.Velocity = m.VelocityMiddleTimeStep + m.Force*dt*0.5/m.Mass;
+                    m.Velocity = m.VelocityMiddleTimeStep + m.Force*(dt*0.5/m.Mass);
             }
 
             SavePreviousValues();
