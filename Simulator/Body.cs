@@ -2,7 +2,7 @@
 
 namespace Simulator
 {
-    public class Item
+    public class Body
     {
         public string Name { get; set; }
         public double Mass { get; set; } // in kg
