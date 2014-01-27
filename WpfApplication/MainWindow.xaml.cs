@@ -27,6 +27,7 @@ namespace WpfApplication
         private int _step;
         private const double Increment = 6*60*60; // 6 hours
         private double _zoom = 300;
+        private Point _zoomPoint = new Point(0, 0);
 
         public MainWindow()
         {
@@ -47,11 +48,18 @@ namespace WpfApplication
 
         private void OnMouseWheel(object sender, MouseWheelEventArgs e)
         {
+            if ((Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift)// e.LeftButton == MouseButtonState.Pressed)
+            {
+                Point position = e.GetPosition(image1);
+                if (position.X >= 0 && position.X < _width && position.Y >= 0 && position.Y < _height)
+                    _zoomPoint = position;
+            }
             int delta = e.Delta;
+            double factor = (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control ? 200.0 : 1.5; // e.RightButton == MouseButtonState.Pressed
             if (delta < 0)
-                _zoom /= e.LeftButton == MouseButtonState.Pressed ? 200.0 : 1.5;
+                _zoom /= factor;
             else
-                _zoom *= e.LeftButton == MouseButtonState.Pressed ? 200.0 : 1.5;
+                _zoom *= factor;
             ClearScreen();
             UpdateScreen(null, null);
         }
@@ -69,11 +77,14 @@ namespace WpfApplication
             _pixelData = new byte[_rawStride*_height];
 
             //
+            _zoomPoint = new Point((double)_width/2, (double)_height/2);
+
+            //
             _step = 0;
 
             //
             //_scene = new Scene(6.67384e-11, 1e-9); // in N m² / kg²  or  m³ / (kg * s²)  http://en.wikipedia.org/wiki/Gravitational_constant
-            _scene = new Scene(6.67384e-11, 1/149597871000.0);
+            _scene = new Scene(6.67384e-11, 1 / 149597871000.0); // 149597871000 = astronomical unit in m
 
             //Body earth = _scene.AddMass(
             //    new Body
@@ -156,15 +167,15 @@ namespace WpfApplication
                         Velocity = new Vector3(0, 24130.9, 0),
                     }
                 );
-            Body jupiter = _scene.AddMass(
-                sun,
-                new Body
-                    {
-                        Name = "Jupiter",
-                        Mass = 1898.70e24,
-                        Position = new Vector3(778412020000, 0, 0),
-                        Velocity = new Vector3(0, 13069.7, 0),
-                    });
+            //Body jupiter = _scene.AddMass(
+            //    sun,
+            //    new Body
+            //        {
+            //            Name = "Jupiter",
+            //            Mass = 1898.70e24,
+            //            Position = new Vector3(778412020000, 0, 0),
+            //            Velocity = new Vector3(0, 13069.7, 0),
+            //        });
 
             //Body sun2 = _scene.AddMass(new Body
             //{
@@ -174,7 +185,18 @@ namespace WpfApplication
             //    //Velocity = new Vector3(0, 10000, 0),
             //    Position = new Vector3(149597890000, 149597890000, 0),
             //    Velocity = new Vector3(0, 1000, 0),
+            //    //Velocity = new Vector3(0, -100000, 0),
             //});
+            Body sun2 = _scene.AddMass(new Body
+            {
+                Name = "Sun2",
+                Mass = 1.989e30,
+                //Position = new Vector3(-149597890000, -149597890000, 0),
+                //Velocity = new Vector3(0, 10000, 0),
+                Position = new Vector3(78412020000, 0, 0),
+                Velocity = new Vector3(-100000, 0, 0),
+                //Velocity = new Vector3(0, -100000, 0),
+            });
         }
 
         private static void SetPixel(int x, int y, Color c, byte[] buffer, int rawStride)
@@ -202,29 +224,20 @@ namespace WpfApplication
         {
             while (true)
             {
-                _scene.SimulateVerlet(_step, Increment);
-                //_scene.SimulateEuler(_step, Increment);
+                //_scene.SimulateVerlet(_step, Increment);
+                _scene.SimulateEuler(_step, Increment);
 
-                //for (int y = 0; y < _height; y++)
-                //{
-                //    int yIndex = y * _rawStride;
-                //    for (int x = 0; x < _rawStride; x += 3)
-                //    {
-                //        _pixelData[x + yIndex] = 0;
-                //        _pixelData[x + yIndex + 1] = 0;
-                //        _pixelData[x + yIndex + 2] = 255;
-                //    }
-                //}
+                double zoomX = (_zoomPoint.X - (double)_width / 2) / _zoom;
+                double zoomY = (_zoomPoint.Y - (double)_height / 2) / _zoom;
+
                 int i = 0;
                 foreach (Body body in _scene.Masses)
                 {
                     // minX, minY   -> 0, 0
                     // 0, 0         -> width/2, height/2
                     // maxX, maxY   -> width, height
-                    //int x = (int)(body.Position.X / 3 + (double)_width / 2);
-                    //int y = (int)(body.Position.Y / 3 + (double)_height / 2);
-                    int x = (int)(body.Position.X * _zoom + _width / 2);
-                    int y = (int)(body.Position.Y * _zoom + _height / 2);
+                    int x = (int)((body.Position.X - zoomX) * _zoom + (double)_width / 2);
+                    int y = (int)((body.Position.Y - zoomY) * _zoom + (double)_height / 2);
 
                     if (x >= 0 && x < _width && y >= 0 && y < _height)
                     {

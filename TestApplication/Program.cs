@@ -1,4 +1,7 @@
 ﻿using System;
+using System.IO;
+using System.Threading.Tasks;
+using System.Windows.Media.Imaging;
 using Simulator;
 using Double3 = Math.Vector3;
 
@@ -8,7 +11,18 @@ namespace TestApplication
     {
         private static void Main(string[] args)
         {
-            Scene scene = new Scene(6.67384e-11, 1e-6);// in N m² / kg²  or  m³ / (kg * s²)  http://en.wikipedia.org/wiki/Gravitational_constant
+            //Efros99 test = new Efros99(new WriteableBitmap(new BitmapImage(new Uri(@"D:\TEMP\TEXTURES\caustics2.jpg"))), 15);
+            //WriteableBitmap bitmap = test.Synthesize(512, 512);
+
+            //using (FileStream stream5 = new FileStream(@"D:\TEMP\TEMP\test.png", FileMode.Create))
+            //{
+            //    PngBitmapEncoder encoder5 = new PngBitmapEncoder();
+            //    encoder5.Frames.Add(BitmapFrame.Create(bitmap));
+            //    encoder5.Save(stream5);
+            //    stream5.Close();
+            //}
+
+            Scene scene = new Scene(6.67384e-11, 1e-6); // in N m² / kg²  or  m³ / (kg * s²)  http://en.wikipedia.org/wiki/Gravitational_constant
             //Body sun = scene.AddMass(new Body
             //    {
             //        Name = "Sun",
@@ -149,13 +163,13 @@ namespace TestApplication
             Console.WindowHeight = 80;
 
             //const double increment = 24 * 60 * 60; // 1 day
-            const double increment = 6 * 60 * 60; // 6 hours
+            const double increment = 6*60*60; // 6 hours
 
             int i = 0;
 
             while (true)
             {
-                Console.WriteLine("{0}|{1}", i / 365, i % 365);
+                Console.WriteLine("{0}|{1}", i/365, i%365);
                 scene.SimulateVerlet(i, increment); //scene.SimulateEuler(i, increment);
                 scene.Dump();
 
